@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+public/file.svg
+public/globe.svg
+public/next.svg
+public/vercel.svg
+public/window.svg
+README.md
+Dockerfile
+.dockerignore
