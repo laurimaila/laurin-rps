@@ -1,0 +1,12 @@
+@token = {{$dotenv REAKTOR_TOKEN}}
+@baseUrl = {{$dotenv BASE_URL}}
+
+### Get SSE live matches
+GET {{baseUrl}}/live
+Authorization: Bearer {{token}}
+### Get match history and cursor for pagination
+GET {{baseUrl}}/history
+Authorization: Bearer {{token}}
+### Get the last matches from history
+GET {{baseUrl}}/history?cursor=NSesIWL-MpA3
+Authorization: Bearer {{token}}

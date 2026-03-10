@@ -19,6 +19,6 @@ ALTER TABLE "matches" ADD CONSTRAINT "matches_player_a_id_players_id_fk" FOREIGN
 ALTER TABLE "matches" ADD CONSTRAINT "matches_player_b_id_players_id_fk" FOREIGN KEY ("player_b_id") REFERENCES "public"."players"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "matches" ADD CONSTRAINT "matches_winner_id_players_id_fk" FOREIGN KEY ("winner_id") REFERENCES "public"."players"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "played_at_idx" ON "matches" USING btree ("played_at");--> statement-breakpoint
-CREATE INDEX "player_a_idx" ON "matches" USING btree ("player_a_id");--> statement-breakpoint
-CREATE INDEX "player_b_idx" ON "matches" USING btree ("player_b_id");--> statement-breakpoint
-CREATE INDEX "leaderboard_idx" ON "matches" USING btree ("winner_id","played_at");
+CREATE INDEX "player_a_played_at_idx" ON "matches" USING btree ("player_a_id","played_at");--> statement-breakpoint
+CREATE INDEX "player_b_played_at_idx" ON "matches" USING btree ("player_b_id","played_at");--> statement-breakpoint
+CREATE INDEX "winner_played_at_idx" ON "matches" USING btree ("winner_id","played_at");

@@ -1,4 +1,4 @@
-import { Hand, Player, calculateWinner } from "@/lib/api";
+import { Player, calculateWinner } from "@/lib/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatInTimeZone } from "date-fns-tz";
@@ -10,11 +10,15 @@ interface Match {
   playerB: Player;
 }
 
-const HandIcon = ({ hand }: { hand: Hand }) => {
-  switch (hand) {
+const HandIcon = ({ hand }: { hand: string }) => {
+  const h = hand.toUpperCase();
+  switch (h) {
     case "ROCK": return <span className="text-xl drop-shadow-sm">🪨</span>;
     case "PAPER": return <span className="text-xl drop-shadow-sm">📄</span>;
     case "SCISSORS": return <span className="text-xl drop-shadow-sm">✂️</span>;
+    case "LIZARD": return <span className="text-xl drop-shadow-sm">🦎</span>;
+    case "SPOCK": return <span className="text-xl drop-shadow-sm">🖖</span>;
+    default: return <span className="text-xl drop-shadow-sm text-slate-700">❓</span>;
   }
 };
 
@@ -23,28 +27,28 @@ export function MatchTable({ matches, highlightPlayer }: { matches: Match[], hig
 
   return (
     <div className="w-full">
-      <Table>
+      <Table className="table-fixed w-full">
         <TableHeader className="bg-slate-900/40">
           <TableRow className="border-slate-800">
             <TableHead className="w-24 text-slate-500 text-[10px] uppercase font-bold">
               Time <span className="text-[8px] opacity-50 font-mono">UTC</span>
             </TableHead>
-            <TableHead className="text-slate-400 font-bold">{highlightPlayer ? "Target Player" : "Player A"}</TableHead>
+            <TableHead className="text-slate-400 font-bold overflow-hidden text-ellipsis whitespace-nowrap">{highlightPlayer ? "Target Player" : "Player A"}</TableHead>
             <TableHead className="text-center w-12"></TableHead>
-            <TableHead className="text-center font-black text-slate-700">VS</TableHead>
+            <TableHead className="text-center w-10 font-black text-slate-700">VS</TableHead>
             <TableHead className="text-center w-12"></TableHead>
-            <TableHead className="text-right text-slate-400 font-bold">{highlightPlayer ? "Opponent" : "Player B"}</TableHead>
+            <TableHead className="text-right text-slate-400 font-bold overflow-hidden text-ellipsis whitespace-nowrap">{highlightPlayer ? "Opponent" : "Player B"}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {matches.map((match) => {
-            const shouldSwap = highlightPlayer && 
+            const shouldSwap = highlightPlayer &&
               match.playerB.name.toLowerCase() === highlightPlayer.toLowerCase();
-            
+
             const pA = shouldSwap ? match.playerB : match.playerA;
             const pB = shouldSwap ? match.playerA : match.playerB;
             const winner = calculateWinner(pA, pB);
-            
+
             const date = new Date(match.time);
 
             return (

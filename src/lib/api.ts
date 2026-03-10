@@ -1,4 +1,4 @@
-export type Hand = "ROCK" | "PAPER" | "SCISSORS";
+export type Hand = string;
 
 export interface Player {
   name: string;
@@ -82,13 +82,27 @@ export const getHistory = async (params: {
   return res.json();
 };
 
+export interface PaginatedLeaderboardResponse {
+  data: LeaderboardEntry[];
+  cursor: { wins: number, name: string } | null;
+}
+
 /**
- * CLIENT-SIDE ONLY: Fetches leaderboard with optional date range
+ * CLIENT-SIDE ONLY: Fetches leaderboard with optional date range and pagination
  */
-export const getLeaderboard = async (startDate?: string, endDate?: string): Promise<{ data: LeaderboardEntry[] }> => {
+export const getLeaderboard = async (params: {
+  startDate?: string,
+  endDate?: string,
+  wins?: number,
+  name?: string,
+  limit?: number
+} = {}): Promise<PaginatedLeaderboardResponse> => {
   const searchParams = new URLSearchParams();
-  if (startDate) searchParams.append('startDate', startDate);
-  if (endDate) searchParams.append('endDate', endDate);
+  if (params.startDate) searchParams.append('startDate', params.startDate);
+  if (params.endDate) searchParams.append('endDate', params.endDate);
+  if (params.wins !== undefined) searchParams.append('wins', params.wins.toString());
+  if (params.name) searchParams.append('name', params.name);
+  if (params.limit) searchParams.append('limit', params.limit.toString());
 
   const res = await fetch(`/api/leaderboard?${searchParams.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch leaderboard from local API");
@@ -96,11 +110,27 @@ export const getLeaderboard = async (startDate?: string, endDate?: string): Prom
 };
 
 export const calculateWinner = (playerA: Player, playerB: Player): "A" | "B" | "TIE" => {
-  if (playerA.played === playerB.played) return "TIE";
+  const hA = playerA.played.toUpperCase();
+  const hB = playerB.played.toUpperCase();
+
+  if (hA === hB) return "TIE";
+
+  const standard = ["ROCK", "PAPER", "SCISSORS"];
+  const isAStandard = standard.includes(hA);
+  const isBStandard = standard.includes(hB);
+
+  // Two weird hands tie
+  if (!isAStandard && !isBStandard) return "TIE";
+
+  // Weird hand loses to standard hand
+  if (isAStandard && !isBStandard) return "A";
+  if (!isAStandard && isBStandard) return "B";
+
+  // Both are standard: normal RPS rules
   if (
-    (playerA.played === "ROCK" && playerB.played === "SCISSORS") ||
-    (playerA.played === "PAPER" && playerB.played === "ROCK") ||
-    (playerA.played === "SCISSORS" && playerB.played === "PAPER")
+    (hA === "ROCK" && hB === "SCISSORS") ||
+    (hA === "PAPER" && hB === "ROCK") ||
+    (hA === "SCISSORS" && hB === "PAPER")
   ) {
     return "A";
   }

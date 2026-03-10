@@ -62,8 +62,8 @@ class MatchService extends EventTarget {
         return;
       }
 
-      // TODO: Increase match limit later
-      const matchLimit = process.env.NODE_ENV === "development" ? 10000 : 10000;
+      // In total there were less than 200k matches
+      const matchLimit = 500000;
 
       if (res.cursor && this.totalMatchesLoaded < matchLimit) {
         console.log(`Waiting 1s before next batch... (${this.totalMatchesLoaded} indexed)`);
@@ -112,8 +112,8 @@ class MatchService extends EventTarget {
           playedAt: new Date(m.time),
           playerAId: m.playerA.name,
           playerBId: m.playerB.name,
-          playerAHand: m.playerA.played.toUpperCase() as any,
-          playerBHand: m.playerB.played.toUpperCase() as any,
+          playerAHand: (m.playerA.played || "UNKNOWN").toUpperCase(),
+          playerBHand: (m.playerB.played || "UNKNOWN").toUpperCase(),
           winnerId: winnerId
         };
       });
@@ -235,6 +235,7 @@ class MatchService extends EventTarget {
 
     const results = await db.execute(query);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
     return results.rows.map((m: any) => ({
       type: "GAME_RESULT",
       gameId: m.id,
@@ -283,12 +284,10 @@ class MatchService extends EventTarget {
     }));
   }
 
-  public async getLeaderboard(startDate?: string, endDate?: string): Promise<PlayerStats[]> {
+  public async getLeaderboard(startDate?: string, endDate?: string, limit = 50, cursor?: { wins: number, name: string }): Promise<PlayerStats[]> {
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
 
-    // If endDate is provided (e.g., '2026-03-09'), it defaults to 00:00:00.
-    // To make it inclusive of that entire day, we add 1 day and use '<'.
     if (end) {
       end.setDate(end.getDate() + 1);
     }
@@ -306,7 +305,11 @@ class MatchService extends EventTarget {
           ${end ? sql` AND m.played_at < ${end}` : sql``}
         GROUP BY p.name
       )
-      SELECT * FROM stats WHERE total > 0 ORDER BY wins DESC, name ASC
+      SELECT * FROM stats
+      WHERE total > 0
+      ${cursor ? sql` AND (wins < ${cursor.wins} OR (wins = ${cursor.wins} AND name > ${cursor.name}))` : sql``}
+      ORDER BY wins DESC, name ASC
+      LIMIT ${limit}
     `;
 
     const results = await db.execute(query);

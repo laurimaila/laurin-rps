@@ -1,16 +1,11 @@
-import { GameResult, calculateWinner, LeaderboardEntry } from "@/lib/api";
+import { LeaderboardEntry } from "@/lib/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-interface PlayerStats {
-  name: string;
-  wins: number;
-  losses: number;
-  ties: number;
-  total: number;
-}
+export function Leaderboard({ data, startDate, endDate }: { data: LeaderboardEntry[], startDate?: string, endDate?: string }) {
+  const isInvalidRange = startDate && endDate && startDate > endDate;
 
-export function Leaderboard({ data }: { data: LeaderboardEntry[] }) {
-  if (data.length === 0) return <div className="p-12 text-center text-slate-500 font-medium italic">Calculating standings...</div>;
+  if (isInvalidRange) return <div className="p-12 text-center text-red-400 font-medium uppercase tracking-tighter">Invalid date range: End date must be after start date.</div>;
+  if (data.length === 0) return <div className="p-12 text-center text-slate-500 font-medium italic">No standings found for selected period</div>;
 
   return (
     <div className="rounded-md overflow-hidden">
@@ -26,7 +21,7 @@ export function Leaderboard({ data }: { data: LeaderboardEntry[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.slice(0, 50).map((p, idx) => (
+          {data.map((p, idx) => (
             <TableRow key={p.name} className="border-slate-800 hover:bg-slate-800/30">
               <TableCell className="font-mono text-slate-500">#{idx + 1}</TableCell>
               <TableCell className="font-bold text-slate-200">{p.name}</TableCell>

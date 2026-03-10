@@ -1,5 +1,5 @@
 {
-  "id": "c72e410c-5bb0-46f2-a035-f2f3d79d389b",
+  "id": "b782b0a9-ee1f-47d7-97f3-8bdfb1b288aa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -69,26 +69,17 @@
           "method": "btree",
           "with": {}
         },
-        "player_a_idx": {
-          "name": "player_a_idx",
+        "player_a_played_at_idx": {
+          "name": "player_a_played_at_idx",
           "columns": [
             {
               "expression": "player_a_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "player_b_idx": {
-          "name": "player_b_idx",
-          "columns": [
+            },
             {
-              "expression": "player_b_id",
+              "expression": "played_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -99,8 +90,29 @@
           "method": "btree",
           "with": {}
         },
-        "leaderboard_idx": {
-          "name": "leaderboard_idx",
+        "player_b_played_at_idx": {
+          "name": "player_b_played_at_idx",
+          "columns": [
+            {
+              "expression": "player_b_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "played_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "winner_played_at_idx": {
+          "name": "winner_played_at_idx",
           "columns": [
             {
               "expression": "winner_id",

@@ -1,7 +1,5 @@
-import { pgTable, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-
-export const handEnum = pgEnum('hand', ['ROCK', 'PAPER', 'SCISSORS']);
 
 export const players = pgTable('players', {
   id: text('id').primaryKey(),
@@ -15,8 +13,8 @@ export const matches = pgTable('matches', {
   playerAId: text('player_a_id').notNull().references(() => players.id),
   playerBId: text('player_b_id').notNull().references(() => players.id),
 
-  playerAHand: handEnum('player_a_hand').notNull(),
-  playerBHand: handEnum('player_b_hand').notNull(),
+  playerAHand: text('player_a_hand').notNull(),
+  playerBHand: text('player_b_hand').notNull(),
 
   winnerId: text('winner_id').references(() => players.id), // Nullable by default for ties
 },
