@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://rps.laurimaila.com"),
-  title: "Laurin RPS | Real time Rock-Paper-Scissors stats",
+  title: "Laurin RPS",
+  description: "Real time Rock-Paper-Scissors stats",
 };
 
 export default function RootLayout({

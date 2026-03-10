@@ -15,10 +15,12 @@ COPY . .
 # Env variables handled at runtime
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm run build
+RUN pnpm run build && pnpm run db:build
 
 RUN cp -r public .next/standalone/ && \
-    cp -r .next/static .next/standalone/.next/
+    cp -r .next/static .next/standalone/.next/ && \
+    cp -r drizzle .next/standalone/ && \
+    cp dist/migrate.js .next/standalone/
 
 FROM node:24-slim AS runtime
 
@@ -40,4 +42,4 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "node migrate.js && node server.js"]

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { GameResult, getHistory, getLeaderboard, LeaderboardEntry } from "@/lib/api";
+import { GameResult, getHistory, getLeaderboard, LeaderboardEntry, PaginatedHistoryResponse } from "@/lib/api";
 import { MatchTable } from "@/components/match-table";
 import { Leaderboard } from "@/components/leaderboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, Calendar } from "lucide-react";
+import { Search, Loader2, Calendar, ChevronDown } from "lucide-react";
 
 export default function Dashboard() {
   const [liveMatches, setLiveMatches] = useState<GameResult[]>([]);
@@ -16,12 +16,15 @@ export default function Dashboard() {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
 
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
 
   const [playerFilter, setPlayerFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  
+  const [nextCursor, setNextCursor] = useState<{ playedAt: number, id: string } | null>(null);
 
   const [liveError, setLiveError] = useState<string | null>(null);
 
@@ -31,8 +34,15 @@ export default function Dashboard() {
     function connect() {
       eventSource = new EventSource("/api/live");
       eventSource.onmessage = (e) => {
-        const result = JSON.parse(e.data);
-        setLiveMatches((prev) => [result, ...prev].slice(0, 50));
+        if (!e.data) return;
+        try {
+          const result = JSON.parse(e.data);
+          if (result && result.gameId) {
+            setLiveMatches((prev) => [result, ...prev].slice(0, 50));
+          }
+        } catch (err) {
+          console.error("Malformed live data received:", err);
+        }
       };
       eventSource.onerror = () => {
         setLiveError("Live stream paused (Reconnecting...)");
@@ -43,18 +53,39 @@ export default function Dashboard() {
     return () => eventSource?.close();
   }, []);
 
-  // 2. Load History (Filtered)
+  // 2. Load History (Initial)
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await getHistory({ player: playerFilter, date: dateFilter });
+      const res: PaginatedHistoryResponse = await getHistory({ player: playerFilter, date: dateFilter, limit: 50 });
       setHistoryMatches(res.data);
+      setNextCursor(res.cursor);
     } finally {
       setLoadingHistory(false);
     }
   }, [playerFilter, dateFilter]);
 
-  // 3. Load Leaderboard
+  // 3. Load More History
+  const loadMoreHistory = async () => {
+    if (!nextCursor || loadingMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const res: PaginatedHistoryResponse = await getHistory({ 
+        player: playerFilter, 
+        date: dateFilter, 
+        playedAt: nextCursor.playedAt, 
+        id: nextCursor.id,
+        limit: 50 
+      });
+      setHistoryMatches(prev => [...prev, ...res.data]);
+      setNextCursor(res.cursor);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // 4. Load Leaderboard
   const loadLeaderboard = useCallback(async () => {
     setLoadingLeaderboard(true);
     try {
@@ -166,8 +197,26 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="p-0 border-t border-slate-800">
-              <div className="max-h-[700px] overflow-auto">
+              <div className="max-h-[700px] overflow-auto flex flex-col">
                 <MatchTable matches={historyMatches} highlightPlayer={playerFilter} />
+                
+                {nextCursor && (
+                  <div className="p-4 border-t border-slate-800 flex justify-center bg-slate-900/20">
+                    <Button 
+                      variant="ghost" 
+                      onClick={loadMoreHistory} 
+                      disabled={loadingMore}
+                      className="w-full md:w-auto gap-2 text-slate-400 hover:text-slate-100"
+                    >
+                      {loadingMore ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                      Load More Matches
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

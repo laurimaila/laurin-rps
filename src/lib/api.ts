@@ -13,9 +13,20 @@ export interface GameResult {
   playerB: Player;
 }
 
+/**
+ * REAKTOR API: Uses a string cursor for navigation
+ */
 export interface HistoryResponse {
   data: GameResult[];
   cursor: string | null;
+}
+
+/**
+ * LOCAL API: Uses a composite cursor object for stable pagination
+ */
+export interface PaginatedHistoryResponse {
+  data: GameResult[];
+  cursor: { playedAt: number, id: string } | null;
 }
 
 const API_BASE = "https://assignments.reaktor.com";
@@ -52,10 +63,19 @@ export interface LeaderboardEntry {
 /**
  * CLIENT-SIDE ONLY: Fetches history from our local Next.js proxy/cache
  */
-export const getHistory = async (params: { player?: string, date?: string } = {}): Promise<HistoryResponse> => {
+export const getHistory = async (params: { 
+  player?: string, 
+  date?: string, 
+  playedAt?: number, 
+  id?: string,
+  limit?: number 
+} = {}): Promise<PaginatedHistoryResponse> => {
   const searchParams = new URLSearchParams();
   if (params.player) searchParams.append('player', params.player);
   if (params.date) searchParams.append('date', params.date);
+  if (params.playedAt) searchParams.append('playedAt', params.playedAt.toString());
+  if (params.id) searchParams.append('id', params.id);
+  if (params.limit) searchParams.append('limit', params.limit.toString());
 
   const res = await fetch(`/api/history?${searchParams.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch history from local API");
@@ -74,6 +94,7 @@ export const getLeaderboard = async (startDate?: string, endDate?: string): Prom
   if (!res.ok) throw new Error("Failed to fetch leaderboard from local API");
   return res.json();
 };
+
 export const calculateWinner = (playerA: Player, playerB: Player): "A" | "B" | "TIE" => {
   if (playerA.played === playerB.played) return "TIE";
   if (
