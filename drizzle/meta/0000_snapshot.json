@@ -1,5 +1,5 @@
 {
-  "id": "b782b0a9-ee1f-47d7-97f3-8bdfb1b288aa",
+  "id": "a61ae964-b011-45fd-9b89-ca4bcdb08664",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -34,15 +34,13 @@
         },
         "player_a_hand": {
           "name": "player_a_hand",
-          "type": "hand",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "player_b_hand": {
           "name": "player_b_hand",
-          "type": "hand",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
@@ -214,17 +212,7 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {
-    "public.hand": {
-      "name": "hand",
-      "schema": "public",
-      "values": [
-        "ROCK",
-        "PAPER",
-        "SCISSORS"
-      ]
-    }
-  },
+  "enums": {},
   "schemas": {},
   "sequences": {},
   "roles": {},

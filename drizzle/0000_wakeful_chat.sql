@@ -1,11 +1,10 @@
-CREATE TYPE "public"."hand" AS ENUM('ROCK', 'PAPER', 'SCISSORS');--> statement-breakpoint
 CREATE TABLE "matches" (
 	"id" text PRIMARY KEY NOT NULL,
 	"played_at" timestamp with time zone NOT NULL,
 	"player_a_id" text NOT NULL,
 	"player_b_id" text NOT NULL,
-	"player_a_hand" "hand" NOT NULL,
-	"player_b_hand" "hand" NOT NULL,
+	"player_a_hand" text NOT NULL,
+	"player_b_hand" text NOT NULL,
 	"winner_id" text
 );
 --> statement-breakpoint
