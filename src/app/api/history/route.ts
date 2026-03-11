@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   let matches;
 
   if (player) {
-    matches = await matchService.getByPlayer(player, limit, cursor);
+    matches = await matchService.getByPlayer(player, limit, cursor, date || undefined);
   } else if (date) {
     matches = await matchService.getByDate(date, limit, cursor);
   } else {

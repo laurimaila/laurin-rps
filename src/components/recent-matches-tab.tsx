@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MatchTable } from "@/components/match-table";
 import { Loader2 } from "lucide-react";
-import { GameResult } from "@/lib/api";
+import { GameResult } from "@/lib/types";
 
 interface RecentMatchesTabProps {
   liveError: string | null;
@@ -23,7 +23,7 @@ export function RecentMatchesTab({ liveError, loadingHistory, unifiedMatches }: 
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="max-h-[700px] overflow-auto">
+        <div className="max-h-175 overflow-auto">
           {loadingHistory ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-slate-700" /></div>
           ) : (

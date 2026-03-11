@@ -1,35 +1,11 @@
-export type Hand = string;
+import {
+  HistoryResponse,
+  PaginatedHistoryResponse,
+  PaginatedLeaderboardResponse,
+  Player
+} from "./types";
 
-export interface Player {
-  name: string;
-  played: Hand;
-}
-
-export interface GameResult {
-  type: "GAME_RESULT";
-  gameId: string;
-  time: number;
-  playerA: Player;
-  playerB: Player;
-}
-
-/**
- * REAKTOR API: Uses a string cursor for navigation
- */
-export interface HistoryResponse {
-  data: GameResult[];
-  cursor: string | null;
-}
-
-/**
- * LOCAL API: Uses a composite cursor object for stable pagination
- */
-export interface PaginatedHistoryResponse {
-  data: GameResult[];
-  cursor: { playedAt: number, id: string } | null;
-}
-
-const API_BASE = "https://assignments.reaktor.com";
+const API_BASE = process.env.API_BASE || "https://assignments.reaktor.com";
 const TOKEN = process.env.REAKTOR_TOKEN;
 
 /**
@@ -52,23 +28,15 @@ export const fetchHistoryFromReaktor = async (cursor?: string): Promise<HistoryR
   return res.json();
 };
 
-export interface LeaderboardEntry {
-  name: string;
-  wins: number;
-  losses: number;
-  ties: number;
-  total: number;
-}
-
 /**
  * CLIENT-SIDE ONLY: Fetches history from our local Next.js proxy/cache
  */
-export const getHistory = async (params: { 
-  player?: string, 
-  date?: string, 
-  playedAt?: number, 
+export const getHistory = async (params: {
+  player?: string,
+  date?: string,
+  playedAt?: number,
   id?: string,
-  limit?: number 
+  limit?: number
 } = {}): Promise<PaginatedHistoryResponse> => {
   const searchParams = new URLSearchParams();
   if (params.player) searchParams.append('player', params.player);
@@ -81,11 +49,6 @@ export const getHistory = async (params: {
   if (!res.ok) throw new Error("Failed to fetch history from local API");
   return res.json();
 };
-
-export interface PaginatedLeaderboardResponse {
-  data: LeaderboardEntry[];
-  cursor: { wins: number, name: string } | null;
-}
 
 /**
  * CLIENT-SIDE ONLY: Fetches leaderboard with optional date range and pagination

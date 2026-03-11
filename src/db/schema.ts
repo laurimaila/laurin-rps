@@ -18,9 +18,9 @@ export const matches = pgTable('matches', {
 
   winnerId: text('winner_id').references(() => players.id), // Nullable by default for ties
 },
-// New optimized composite indexes for high-performance joins and filtering
+// Composite indexes for joins and filtering
 (table) => [
-  index('played_at_idx').on(table.playedAt), 
+  index('played_at_idx').on(table.playedAt),
   index('player_a_played_at_idx').on(table.playerAId, table.playedAt),
   index('player_b_played_at_idx').on(table.playerBId, table.playedAt),
   index('winner_played_at_idx').on(table.winnerId, table.playedAt),

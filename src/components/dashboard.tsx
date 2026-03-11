@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { GameResult, getHistory, getLeaderboard, LeaderboardEntry, PaginatedHistoryResponse, PaginatedLeaderboardResponse } from "@/lib/api";
+import { getHistory, getLeaderboard } from "@/lib/api";
+import { 
+  GameResult, 
+  LeaderboardEntry, 
+  PaginatedHistoryResponse, 
+  PaginatedLeaderboardResponse 
+} from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RecentMatchesTab } from "@/components/recent-matches-tab";
 import { LeaderboardTab } from "@/components/leaderboard-tab";

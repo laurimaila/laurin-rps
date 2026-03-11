@@ -1,4 +1,4 @@
-import { LeaderboardEntry } from "@/lib/api";
+import { LeaderboardEntry } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export function Leaderboard({ data, startDate, endDate }: { data: LeaderboardEntry[], startDate?: string, endDate?: string }) {
@@ -8,27 +8,27 @@ export function Leaderboard({ data, startDate, endDate }: { data: LeaderboardEnt
   if (data.length === 0) return <div className="p-12 text-center text-slate-500 font-medium italic">No standings found for selected period</div>;
 
   return (
-    <div className="rounded-md overflow-hidden">
-      <Table>
+    <div className="rounded-md overflow-hidden px-2 md:px-6 py-2">
+      <Table className="md:max-w-4xl mx-auto">
         <TableHeader className="bg-slate-900/40 border-b border-slate-800">
-          <TableRow className="border-none">
-            <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Rank</TableHead>
-            <TableHead className="text-slate-400 font-bold uppercase text-[10px]">Player</TableHead>
-            <TableHead className="text-emerald-500 font-bold uppercase text-[10px]">Wins</TableHead>
-            <TableHead className="text-red-500 font-bold uppercase text-[10px]">Losses</TableHead>
-            <TableHead className="text-slate-500 font-bold uppercase text-[10px]">Ties</TableHead>
-            <TableHead className="text-slate-400 font-bold uppercase text-[10px]">Total</TableHead>
+          <TableRow className="border-none hover:bg-transparent">
+            <TableHead className="text-slate-500 font-bold uppercase text-[10px] px-2 w-12">Rank</TableHead>
+            <TableHead className="text-slate-400 font-bold uppercase text-[10px] px-2">Player</TableHead>
+            <TableHead className="text-emerald-500 font-bold uppercase text-[10px] px-2 w-16 md:w-24 text-center">Wins</TableHead>
+            <TableHead className="text-red-500 font-bold uppercase text-[10px] px-2 w-16 md:w-24 text-center hidden md:table-cell">Losses</TableHead>
+            <TableHead className="text-slate-500 font-bold uppercase text-[10px] px-2 w-16 md:w-24 text-center hidden md:table-cell">Ties</TableHead>
+            <TableHead className="text-slate-400 font-bold uppercase text-[10px] px-2 w-16 md:w-24 text-center">Total</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((p, idx) => (
             <TableRow key={p.name} className="border-slate-800 hover:bg-slate-800/30">
-              <TableCell className="font-mono text-slate-500">#{idx + 1}</TableCell>
-              <TableCell className="font-bold text-slate-200">{p.name}</TableCell>
-              <TableCell className="text-emerald-400 font-black">{p.wins}</TableCell>
-              <TableCell className="text-red-400/80">{p.losses}</TableCell>
-              <TableCell className="text-slate-600">{p.ties}</TableCell>
-              <TableCell className="text-slate-400">{p.total}</TableCell>
+              <TableCell className="font-mono text-slate-500 text-xs px-2">#{idx + 1}</TableCell>
+              <TableCell className="font-bold text-slate-200 text-xs px-2 truncate max-w-[100px] md:max-w-none">{p.name}</TableCell>
+              <TableCell className="text-emerald-400 font-black text-xs px-2 text-center">{p.wins}</TableCell>
+              <TableCell className="text-red-400/80 text-xs px-2 text-center hidden md:table-cell">{p.losses}</TableCell>
+              <TableCell className="text-slate-600 text-xs px-2 text-center hidden md:table-cell">{p.ties}</TableCell>
+              <TableCell className="text-slate-400 text-xs px-2 text-center">{p.total}</TableCell>
             </TableRow>
           ))}
         </TableBody>

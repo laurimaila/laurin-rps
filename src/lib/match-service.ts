@@ -1,4 +1,5 @@
-import { GameResult, fetchHistoryFromReaktor, calculateWinner, Hand } from "./api";
+import { fetchHistoryFromReaktor, calculateWinner } from "./api";
+import { GameResult, Hand } from "./types";
 import { db } from "@/db";
 import { matches, players } from "@/db/schema";
 import { desc, and, gte, lte, lt, sql, or, eq } from "drizzle-orm";
@@ -17,6 +18,7 @@ class MatchService extends EventTarget {
   private isLiveConnected = false;
   private isHistoryLoaded = false;
   private token = process.env.REAKTOR_TOKEN;
+  private apiBase = process.env.API_BASE;
   private totalMatchesLoaded = 0;
 
   private constructor() {
@@ -145,7 +147,7 @@ class MatchService extends EventTarget {
     this.isLiveConnected = true;
 
     try {
-      const response = await fetch("https://assignments.reaktor.com/live", {
+      const response = await fetch(`${this.apiBase}/live`, {
         headers: { Authorization: `Bearer ${this.token}` },
         cache: 'no-store'
       });
@@ -212,36 +214,42 @@ class MatchService extends EventTarget {
     }));
   }
 
-  public async getByPlayer(name: string, limit = 100, cursor?: { playedAt: number, id: string }): Promise<GameResult[]> {
+  public async getByPlayer(name: string, limit = 100, cursor?: { playedAt: number, id: string }, date?: string): Promise<GameResult[]> {
     const cursorDate = cursor ? new Date(cursor.playedAt) : null;
-    const cursorId = cursor?.id || null;
+    const cursorId = cursor?.id;
 
-    // Optimized with UNION ALL to ensure index usage for both columns separately.
-    // We use a composite cursor filter (played_at, id) < (cursor_date, cursor_id)
-    const query = sql`
-      WITH filtered AS (
-        (SELECT * FROM ${matches}
-         WHERE player_a_id = ${name}
-         ${cursorDate ? sql` AND (played_at < ${cursorDate} OR (played_at = ${cursorDate} AND id < ${cursorId}))` : sql``})
-        UNION ALL
-        (SELECT * FROM ${matches}
-         WHERE player_b_id = ${name} AND player_a_id != ${name}
-         ${cursorDate ? sql` AND (played_at < ${cursorDate} OR (played_at = ${cursorDate} AND id < ${cursorId}))` : sql``})
-      )
-      SELECT * FROM filtered
-      ORDER BY played_at DESC, id DESC
-      LIMIT ${limit}
-    `;
+    let dateStart: Date | null = null;
+    let dateEnd: Date | null = null;
 
-    const results = await db.execute(query);
+    if (date) {
+      dateStart = new Date(date);
+      dateEnd = new Date(date);
+      dateEnd.setDate(dateEnd.getDate() + 1);
+    }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return results.rows.map((m: any) => ({
+    const results = await db.query.matches.findMany({
+      where: and(
+        or(eq(matches.playerAId, name), eq(matches.playerBId, name)),
+        dateStart && dateEnd ? and(gte(matches.playedAt, dateStart), lt(matches.playedAt, dateEnd)) : undefined,
+        cursorDate && cursorId ? or(
+          lt(matches.playedAt, cursorDate),
+          and(eq(matches.playedAt, cursorDate), lt(matches.id, cursorId))
+        ) : undefined
+      ),
+      limit,
+      orderBy: [desc(matches.playedAt), desc(matches.id)],
+      with: {
+        playerA: true,
+        playerB: true
+      }
+    });
+
+    return results.map(m => ({
       type: "GAME_RESULT",
       gameId: m.id,
-      time: new Date(m.played_at).getTime(),
-      playerA: { name: m.player_a_id, played: m.player_a_hand as Hand },
-      playerB: { name: m.player_b_id, played: m.player_b_hand as Hand }
+      time: m.playedAt.getTime(),
+      playerA: { name: m.playerA.name, played: m.playerAHand as Hand },
+      playerB: { name: m.playerB.name, played: m.playerBHand as Hand }
     }));
   }
 

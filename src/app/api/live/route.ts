@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { matchService } from '@/lib/match-service';
-import { GameResult } from '@/lib/api';
+import { GameResult } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
