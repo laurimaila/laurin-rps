@@ -9,6 +9,15 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
+      // Periodic keep-alive to prevent timeouts
+      const keepAliveInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(": keep-alive\n\n"));
+        } catch (e) {
+          clearInterval(keepAliveInterval);
+        }
+      }, 20_000);
+
       // Initial keep-alive
       controller.enqueue(encoder.encode(": keep-alive\n\n"));
 
@@ -20,8 +29,8 @@ export async function GET(req: NextRequest) {
 
       matchService.addEventListener("new_match", onNewMatch);
 
-      // Clean up on close
-      req.signal.addEventListener('abort', () => {
+      req.signal.addEventListener("abort", () => {
+        clearInterval(keepAliveInterval);
         matchService.removeEventListener("new_match", onNewMatch);
       });
     }
@@ -30,8 +39,8 @@ export async function GET(req: NextRequest) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
     },
   });
 }

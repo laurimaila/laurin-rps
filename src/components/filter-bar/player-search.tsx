@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { getPlayers } from "@/lib/api";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import { InputGroupAddon } from "@/components/ui/input-group";
+import { cn } from "@/lib/utils";
 
 interface PlayerSearchProps {
   playerFilter: string;
@@ -11,14 +19,13 @@ interface PlayerSearchProps {
   className?: string;
 }
 
+const MAX_SUGGESTIONS = 10;
+
 // Suggest player names as user types in the input field
-export function PlayerSearch({
-  playerFilter,
-  setPlayerFilter,
-  className = ""
-}: PlayerSearchProps) {
+export function PlayerSearch({ playerFilter, setPlayerFilter, className = "" }: PlayerSearchProps) {
   const [players, setPlayers] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState(playerFilter);
+  const [inputValue, setInputValue] = useState("");
+  const [debouncedInput, setDebouncedInput] = useState(inputValue);
 
   useEffect(() => {
     getPlayers().then(setPlayers).catch(console.error);
@@ -28,41 +35,53 @@ export function PlayerSearch({
     setInputValue(playerFilter);
   }, [playerFilter]);
 
-  const lowerInput = inputValue.toLowerCase();
-  const filteredPlayers = lowerInput
-  ? players.filter(p => {
-      const lowerPlayer = p.toLowerCase();
-      return lowerPlayer.includes(lowerInput) && lowerPlayer !== lowerInput;
-    })
-  : [];
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedInput(inputValue), 200);
+    return () => clearTimeout(id);
+  }, [inputValue]);
 
-  // Only show when there are 10 or less matches
-  const showSuggestions = filteredPlayers.length > 0 && filteredPlayers.length <= 10;
+  const filteredPlayers = debouncedInput
+    ? players
+        .filter((p) => p.toLowerCase().includes(debouncedInput.toLowerCase()))
+        .slice(0, MAX_SUGGESTIONS)
+    : [];
 
   return (
-    <div className={`flex items-center md:w-50 relative border-t sm:border-t-0 sm:border-l border-slate-800 px-4 gap-3 flex-1 md:flex-none py-1.5 sm:py-0 ${className}`}>
-      <Search className="h-4 w-4 text-slate-500 shrink-0 pointer-events-none" />
-      <Input
-        placeholder="Search by name"
-        value={inputValue}
-        onChange={(e) => {
-          const val = e.target.value;
-          setInputValue(val);
-          if (players.includes(val)) {
+    <div className={cn("flex items-center md:w-48 border-t sm:border-t-0 border-slate-800 flex-1 md:flex-none", className)}>
+      <Combobox
+        items={filteredPlayers}
+        value={playerFilter}
+        onValueChange={(val) => {
+          if (typeof val === 'string') {
             setPlayerFilter(val);
           }
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            setPlayerFilter(inputValue);
-          }
-        }}
-        list="player-names"
-        className="h-8 border-none bg-transparent text-[12px] pl-2 pr-4 py-0 focus-visible:ring-0 text-slate-300 placeholder:text-slate-700 font-bold tracking-tight"
-      />
-      <datalist id="player-names">
-        {showSuggestions && filteredPlayers.map(p => <option key={p} value={p} />)}
-      </datalist>
+        onInputValueChange={setInputValue}
+        inputValue={inputValue}
+      >
+        <ComboboxInput
+          placeholder="Search player..."
+          showTrigger={false}
+          className="border-none bg-transparent h-8 shadow-none w-full ring-0 focus-within:ring-0"
+        >
+          <InputGroupAddon align="inline-start" className="pl-4">
+            <Search className="h-4 w-4 text-slate-500" />
+          </InputGroupAddon>
+        </ComboboxInput>
+        <ComboboxContent className="bg-slate-900 border-slate-800">
+          <ComboboxList className="custom-scrollbar">
+            {(player) => (
+              <ComboboxItem
+                key={player}
+                value={player}
+                className="text-slate-300 data-highlighted:bg-slate-800 data-highlighted:text-white py-2.5 px-3"
+              >
+                {player}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
     </div>
   );
-  }
+}

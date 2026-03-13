@@ -6,7 +6,8 @@ import {
   getAllPlayerNames,
 } from "./match-queries";
 
-import { crawlHistory, connectLiveStream } from "./match-sync";
+import { crawlHistory } from "./match-store";
+import { connectExternalStream } from "./match-live";
 
 class MatchService extends EventTarget {
 
@@ -33,7 +34,7 @@ class MatchService extends EventTarget {
 
     crawlHistory();
 
-    connectLiveStream((match) => {
+    connectExternalStream((match) => {
       this.dispatchEvent(new CustomEvent("new_match", { detail: match }));
     });
   }

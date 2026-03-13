@@ -2,22 +2,18 @@ import { db } from "@/db";
 import { matches, players } from "@/db/schema";
 import { GameResult } from "./types";
 import { calculateWinner, fetchHistoryFromBadApi } from "./api";
-
-const API_BASE = process.env.API_BASE;
-const TOKEN = process.env.REAKTOR_TOKEN;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { sleep } from "./utils";
 
 export async function storeMatches(results: GameResult[]): Promise<{
-  newMatches: number;
   totalMatches: number;
-  newPlayers: number;
+  newMatches: number;
   totalPlayers: number;
+  newPlayers: number;
 }> {
   if (results.length === 0) return { newMatches: 0, totalMatches: 0, newPlayers: 0, totalPlayers: 0 };
 
   try {
-    // Add unique players to the database
+    // Only add unique players
     const uniquePlayers = [...new Set(results.flatMap(m => [m.playerA.name, m.playerB.name]))]
       .map(name => ({ id: name, name }));
 
@@ -53,8 +49,8 @@ export async function storeMatches(results: GameResult[]): Promise<{
       totalPlayers: uniquePlayers.length
     };
   } catch (err) {
-    console.error(`Error storing batch:`, err);
-    return { newMatches: 0, totalMatches: 0, newPlayers: 0, totalPlayers: 0 };
+    console.error(`Error storing matches to database:`, err);
+    throw err;
   }
 }
 
@@ -96,50 +92,13 @@ export async function crawlHistory(
         break;
       }
 
-      await sleep(1000);
+      await sleep(2000);
     } catch (err) {
-      console.error("Sync Error:", err);
+      console.error("Error during sync:", err);
       // Wait before retrying with same cursor
       await sleep(10000);
     }
   }
 
   console.log(`Sync completed. Total matches processed: ${currentTotal}`);
-}
-
-
-export async function connectLiveStream(onMatch: (match: GameResult) => void) {
-  try {
-    const response = await fetch(`${API_BASE}/live`, {
-      headers: { Authorization: `Bearer ${TOKEN}` },
-      cache: 'no-store'
-    });
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error("No body");
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        if (line.startsWith("data:")) {
-          try {
-            const data = JSON.parse(line.replace("data:", "").trim());
-            if (data.type === "GAME_RESULT") {
-              await storeMatches([data]);
-              onMatch(data);
-            }
-          } catch (e) {}
-        }
-      }
-    }
-  } catch (err) {
-    console.error("Live Error:", err);
-    setTimeout(() => connectLiveStream(onMatch), 5000);
-  }
 }
