@@ -7,9 +7,18 @@ interface InfiniteScrollProps {
   onLoadMore: () => void;
   hasMore: boolean;
   isLoading: boolean;
+  isEmpty?: boolean;
+  emptyMessage?: string;
 }
 
-export function InfiniteScroll({ onLoadMore, hasMore, isLoading }: InfiniteScrollProps) {
+// Reusable infinite scroll to allow loading more matches/stadings as user scrolls down
+export function InfiniteScroll({
+  onLoadMore,
+  hasMore,
+  isLoading,
+  isEmpty,
+  emptyMessage = "No matches found"
+}: InfiniteScrollProps) {
   const observerTarget = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +43,7 @@ export function InfiniteScroll({ onLoadMore, hasMore, isLoading }: InfiniteScrol
       {isLoading && <Loader2 className="h-5 w-5 animate-spin text-slate-500" />}
       {!hasMore && !isLoading && (
         <span className="text-xs text-slate-600 font-medium uppercase tracking-widest">
-          End of results
+          {isEmpty ? emptyMessage : "End of results"}
         </span>
       )}
     </div>

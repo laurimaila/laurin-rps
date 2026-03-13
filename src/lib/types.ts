@@ -21,7 +21,7 @@ export interface LeaderboardEntry {
   total: number;
 }
 
-export interface Cursor {
+export interface HistoryCursor {
   playedAt: number;
   id: string;
 }
@@ -33,7 +33,7 @@ export interface LeaderboardCursor {
 
 export interface PaginatedHistoryResponse {
   data: GameResult[];
-  cursor: Cursor | null;
+  cursor: HistoryCursor | null;
 }
 
 export interface PaginatedLeaderboardResponse {

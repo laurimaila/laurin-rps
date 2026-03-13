@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import path from 'path';
 
 async function runMigrations() {
-  console.log('Running database migrations...');
+  console.log('Running database migrations');
 
   const pool = new Pool({
     host: process.env.POSTGRES_HOST,
@@ -19,13 +19,11 @@ async function runMigrations() {
   const db = drizzle(pool);
 
   try {
-    // Path to the 'drizzle' folder where generated .sql files live
-    // Relative to the project root
     await migrate(db, { migrationsFolder: path.join(process.cwd(), 'drizzle') });
 
     console.log('Migrations complete');
   } catch (err) {
-    console.error('Migrations failed!', err);
+    console.error('Migrations failed:', err);
     process.exit(1);
   } finally {
     await pool.end();

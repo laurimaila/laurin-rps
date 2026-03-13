@@ -5,18 +5,17 @@ import {
   Player
 } from "./types";
 
-const API_BASE = process.env.API_BASE || "https://assignments.reaktor.com";
+const API_BASE = process.env.API_BASE;
 const TOKEN = process.env.REAKTOR_TOKEN;
 
-/**
- * SERVER-SIDE ONLY: Fetches history directly from Reaktor API
- */
-export const fetchHistoryFromReaktor = async (cursor?: string): Promise<HistoryResponse> => {
+
+// Server: Fetch history from Bad API
+export const fetchHistoryFromBadApi = async (cursor?: string): Promise<HistoryResponse> => {
   const url = cursor
     ? `${API_BASE}${cursor}`
     : `${API_BASE}/history`;
 
-  console.log(`📡 Server fetching history from: ${url}`);
+  console.log(`Server fetching history from: ${url}`);
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${TOKEN}`,
@@ -24,13 +23,12 @@ export const fetchHistoryFromReaktor = async (cursor?: string): Promise<HistoryR
     cache: 'no-store'
   });
 
-  if (!res.ok) throw new Error(`Reaktor API Error: ${res.status}`);
+  if (!res.ok) throw new Error(`Bad API Error: ${res.status}`);
   return res.json();
 };
 
-/**
- * CLIENT-SIDE ONLY: Fetches history from our local Next.js proxy/cache
- */
+
+// Client: Fetch history from our local Next.js proxy/cache
 export const getHistory = async (params: {
   player?: string,
   date?: string,
@@ -46,13 +44,12 @@ export const getHistory = async (params: {
   if (params.limit) searchParams.append('limit', params.limit.toString());
 
   const res = await fetch(`/api/history?${searchParams.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch history from local API");
+  if (!res.ok) throw new Error("Failed to fetch history from Next backend");
   return res.json();
 };
 
-/**
- * CLIENT-SIDE ONLY: Fetches leaderboard with optional date range and pagination
- */
+
+// Client: Fetch leaderboard with optional date range and pagination
 export const getLeaderboard = async (params: {
   startDate?: string,
   endDate?: string,
@@ -68,7 +65,15 @@ export const getLeaderboard = async (params: {
   if (params.limit) searchParams.append('limit', params.limit.toString());
 
   const res = await fetch(`/api/leaderboard?${searchParams.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch leaderboard from local API");
+  if (!res.ok) throw new Error("Failed to fetch leaderboard from Next backend");
+  return res.json();
+};
+
+
+// Client: Fetches all players for filter dropdowns
+export const getPlayers = async (): Promise<string[]> => {
+  const res = await fetch("/api/players");
+  if (!res.ok) throw new Error("Failed to fetch players from Next backend");
   return res.json();
 };
 
@@ -82,14 +87,14 @@ export const calculateWinner = (playerA: Player, playerB: Player): "A" | "B" | "
   const isAStandard = standard.includes(hA);
   const isBStandard = standard.includes(hB);
 
-  // Two weird hands tie
+  // Two funny hands causes tie
   if (!isAStandard && !isBStandard) return "TIE";
 
-  // Weird hand loses to standard hand
+  // Funny hand loses to standard
   if (isAStandard && !isBStandard) return "A";
   if (!isAStandard && isBStandard) return "B";
 
-  // Both are standard: normal RPS rules
+  // Normal RPS rules
   if (
     (hA === "ROCK" && hB === "SCISSORS") ||
     (hA === "PAPER" && hB === "ROCK") ||

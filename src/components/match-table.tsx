@@ -20,12 +20,24 @@ const HandIcon = ({ hand }: { hand: string }) => {
     case "SCISSORS": return <span className="text-xl drop-shadow-sm">✂️</span>;
     case "LIZARD": return <span className="text-xl drop-shadow-sm">🦎</span>;
     case "SPOCK": return <span className="text-xl drop-shadow-sm">🖖</span>;
+    case "DOG": return <span className="text-xl drop-shadow-sm">🐕</span>;
     default: return <span className="text-xl drop-shadow-sm text-slate-700">❓</span>;
   }
 };
 
-export function MatchTable({ matches, highlightPlayer }: { matches: Match[], highlightPlayer?: string }) {
-  if (matches.length === 0) return <div className="p-12 text-center text-slate-500 font-medium italic">Scanning for new matches...</div>;
+export function MatchTable({ 
+  matches, 
+  highlightPlayer, 
+  emptyMessage = "Searching new matches..." 
+}: { 
+  matches: Match[], 
+  highlightPlayer?: string,
+  emptyMessage?: string | null
+}) {
+  if (matches.length === 0) {
+    if (emptyMessage === null) return null;
+    return <div className="p-12 text-center text-slate-500 font-medium italic">{emptyMessage}</div>;
+  }
 
   return (
     <div className="w-full">

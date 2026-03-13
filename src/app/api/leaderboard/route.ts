@@ -8,17 +8,16 @@ export async function GET(req: NextRequest) {
   const startDate = searchParams.get('startDate') || undefined;
   const endDate = searchParams.get('endDate') || undefined;
   const limitStr = searchParams.get('limit');
+  // Use winStr and name for pagination cursor
   const winsStr = searchParams.get('wins');
   const name = searchParams.get('name') || undefined;
 
   const limit = limitStr ? parseInt(limitStr) : 50;
   const wins = winsStr ? parseInt(winsStr) : undefined;
-  
   const cursor = (wins !== undefined && name) ? { wins, name } : undefined;
 
   const stats = await matchService.getLeaderboard(startDate, endDate, limit, cursor);
 
-  // Generate next cursor if we have results and possibly more
   let nextCursor = null;
   if (stats.length === limit) {
     const last = stats[stats.length - 1];

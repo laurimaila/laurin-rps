@@ -1,11 +1,12 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaderboard } from "@/components/leaderboard";
-import { InfiniteScroll } from "@/components/ui/infinite-scroll";
+import { Leaderboard } from "./leaderboard";
+import { InfiniteScroll } from "@/components/infinite-scroll/infinite-scroll";
 import { Input } from "@/components/ui/input";
 import { Loader2, Calendar } from "lucide-react";
 import { LeaderboardEntry, LeaderboardCursor } from "@/lib/types";
+import { FilterBar } from "@/components/filter-bar/filter-bar";
 
 interface LeaderboardTabProps {
   startDate: string;
@@ -37,13 +38,16 @@ export function LeaderboardTab({
           <CardTitle className="text-[10px] md:text-sm font-black flex items-center gap-2 text-slate-100 uppercase tracking-widest whitespace-nowrap px-1">
             Leaderboard
           </CardTitle>
-          <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-4 bg-slate-900 p-1.5 rounded-lg border border-slate-800 w-full md:w-auto">
+          <FilterBar
+            onClear={() => { setStartDate(""); setEndDate(""); }}
+            canClear={!!(startDate || endDate)}
+          >
             <div className="flex items-center gap-2 md:gap-3 px-3 flex-1 md:flex-none justify-between md:justify-start">
               <Calendar className="h-4 w-4 text-slate-500 shrink-0" />
               <div className="flex items-center gap-2 flex-1 md:flex-none">
                 <Input
                   type="date"
-                  className="h-8 border-none bg-transparent text-[12px] px-2 focus-visible:ring-0 w-[100px] md:w-32 text-slate-300 cursor-pointer [color-scheme:dark]"
+                  className="h-8 border-none bg-transparent text-[12px] px-2 focus-visible:ring-0 w-25 md:w-32 text-slate-300 cursor-pointer scheme-dark"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                   onClick={(e) => e.currentTarget.showPicker()}
@@ -51,26 +55,18 @@ export function LeaderboardTab({
                 <span className="text-slate-700 text-[10px] font-bold px-1">TO</span>
                 <Input
                   type="date"
-                  className="h-8 border-none bg-transparent text-[12px] px-2 focus-visible:ring-0 w-[100px] md:w-32 text-slate-300 cursor-pointer [color-scheme:dark]"
+                  className="h-8 border-none bg-transparent text-[12px] px-2 focus-visible:ring-0 w-25 md:w-32 text-slate-300 cursor-pointer scheme-dark"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                   onClick={(e) => e.currentTarget.showPicker()}
                 />
               </div>
             </div>
-            {(startDate || endDate) && (
-              <button
-                onClick={() => { setStartDate(""); setEndDate(""); }}
-                className="text-[10px] font-black text-slate-500 hover:text-red-400 px-3 border-l border-slate-800 transition-colors uppercase ml-auto"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+          </FilterBar>
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="max-h-[700px] overflow-auto">
+        <div className="max-h-175 overflow-auto">
           {loadingLeaderboard ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-slate-700" /></div>
           ) : (
@@ -79,6 +75,8 @@ export function LeaderboardTab({
               <InfiniteScroll
                 isLoading={loadingMoreLeaderboard}
                 hasMore={!!leaderboardCursor}
+                isEmpty={leaderboardData.length === 0}
+                emptyMessage="No standings found"
                 onLoadMore={() => loadLeaderboard(false)}
               />
             </>

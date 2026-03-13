@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
-      // Send initial keep-alive
+      // Initial keep-alive
       controller.enqueue(encoder.encode(": keep-alive\n\n"));
 
       const onNewMatch = (event: Event) => {

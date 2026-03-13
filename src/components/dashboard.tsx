@@ -2,18 +2,19 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getHistory, getLeaderboard } from "@/lib/api";
-import { 
-  GameResult, 
-  LeaderboardEntry, 
-  PaginatedHistoryResponse, 
-  PaginatedLeaderboardResponse 
+import {
+  GameResult,
+  LeaderboardEntry,
+  PaginatedHistoryResponse,
+  PaginatedLeaderboardResponse
 } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecentMatchesTab } from "@/components/recent-matches-tab";
-import { LeaderboardTab } from "@/components/leaderboard-tab";
-import { HistoryTab } from "@/components/history-tab";
+import { RecentMatchesTab } from "@/components/recent-matches/recent-matches-tab";
+import { LeaderboardTab } from "@/components/leaderboard/leaderboard-tab";
+import { HistoryTab } from "@/components/history/history-tab";
 
 export default function Dashboard() {
+  // Could be later split into separate components if this grows too big
   const [liveMatches, setLiveMatches] = useState<GameResult[]>([]);
   const [historyMatches, setHistoryMatches] = useState<GameResult[]>([]);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
@@ -33,8 +34,8 @@ export default function Dashboard() {
   const [historyCursor, setHistoryCursor] = useState<{ playedAt: number, id: string } | null>(null);
   const [leaderboardCursor, setLeaderboardCursor] = useState<{ wins: number, name: string } | null>(null);
 
-  // Use refs to store the latest cursor values. This allows the useCallback 
-  // to be stable even when cursors update, satisfying the linter.
+  // Use refs to store cursor values, allows useCallback
+  // to be stable when cursors update
   const historyCursorRef = useRef(historyCursor);
   const leaderboardCursorRef = useRef(leaderboardCursor);
 
@@ -43,7 +44,7 @@ export default function Dashboard() {
 
   const [liveError, setLiveError] = useState<string | null>(null);
 
-  // 1. Live Stream Connection
+  // Connect to live endpoint
   useEffect(() => {
     let eventSource: EventSource | null = null;
     function connect() {
@@ -56,11 +57,11 @@ export default function Dashboard() {
             setLiveMatches((prev) => [result, ...prev].slice(0, 50));
           }
         } catch (err) {
-          console.error("Malformed live data received:", err);
+          console.error("Problem pasing live data:", err);
         }
       };
       eventSource.onerror = () => {
-        setLiveError("Live stream paused (Reconnecting...)");
+        setLiveError("Live connection lost");
         eventSource?.close();
       };
     }
@@ -68,7 +69,7 @@ export default function Dashboard() {
     return () => eventSource?.close();
   }, []);
 
-  // 2. Load History
+  // Load history on initial load or when filters change
   const loadHistory = useCallback(async (isInitial = true) => {
     if (isInitial) setLoadingHistory(true);
     else setLoadingMoreHistory(true);
@@ -93,7 +94,7 @@ export default function Dashboard() {
     }
   }, [playerFilter, dateFilter]);
 
-  // 3. Load Leaderboard
+  // Load standings on initial load or when filters change
   const loadLeaderboard = useCallback(async (isInitial = true) => {
     // Prevent invalid date ranges
     if (startDate && endDate && startDate > endDate) {
@@ -131,6 +132,7 @@ export default function Dashboard() {
   useEffect(() => { loadHistory(true); }, [playerFilter, dateFilter, loadHistory]);
   useEffect(() => { loadLeaderboard(true); }, [startDate, endDate, loadLeaderboard]);
 
+  // In recent matches, show a deduped list of history + live
   const seenIds = new Set();
   const unifiedMatches = [...liveMatches, ...historyMatches].filter(m => {
     if (seenIds.has(m.gameId)) return false;
@@ -159,15 +161,15 @@ export default function Dashboard() {
         </TabsList>
 
         <TabsContent value="live" className="w-full">
-          <RecentMatchesTab 
-            liveError={liveError} 
-            loadingHistory={loadingHistory} 
-            unifiedMatches={unifiedMatches} 
+          <RecentMatchesTab
+            liveError={liveError}
+            loadingHistory={loadingHistory}
+            unifiedMatches={unifiedMatches}
           />
         </TabsContent>
 
         <TabsContent value="leaderboard" className="w-full">
-          <LeaderboardTab 
+          <LeaderboardTab
             startDate={startDate}
             endDate={endDate}
             setStartDate={setStartDate}
@@ -181,7 +183,7 @@ export default function Dashboard() {
         </TabsContent>
 
         <TabsContent value="history" className="w-full">
-          <HistoryTab 
+          <HistoryTab
             dateFilter={dateFilter}
             setDateFilter={setDateFilter}
             playerFilter={playerFilter}

@@ -18,7 +18,7 @@ export const matches = pgTable('matches', {
 
   winnerId: text('winner_id').references(() => players.id), // Nullable by default for ties
 },
-// Composite indexes for joins and filtering
+// Indexes for efficient querying
 (table) => [
   index('played_at_idx').on(table.playedAt),
   index('player_a_played_at_idx').on(table.playerAId, table.playedAt),
@@ -26,6 +26,7 @@ export const matches = pgTable('matches', {
   index('winner_played_at_idx').on(table.winnerId, table.playedAt),
 ]);
 
+// Relation for easier querying with Drizzle
 export const playersRelations = relations(players, ({ many }) => ({
   matchesAsA: many(matches, { relationName: 'playerA' }),
   matchesAsB: many(matches, { relationName: 'playerB' }),
