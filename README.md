@@ -2,7 +2,7 @@
 
 A Next.js web app for presenting Rock-Paper-Scissors matches fetched from Reaktor's Bad API. Stores matches in a Postgres database using Drizzle ORM.
 
-The app is deployed to my k8s cluster found at [https://rps.laurimaila.com](https://rps.laurimaila.com).
+The app is deployed to my k8s cluster found at [https://rps.laurimaila.com](https://rps.laurimaila.com)
 
 ## Tech Stack
 
@@ -22,19 +22,20 @@ The app is deployed to my k8s cluster found at [https://rps.laurimaila.com](http
 
 ## Architecture
 
-### 1. Match Service (`src/lib/match-service.ts`)
-A singleton `EventTarget` that manages:
-- **Live Connection**: Maintains a persistent connection to Bad API and broadcasts new matches to the API layer.
-- **Historical Sync**: Crawls the Bad API history and saves new player and match data to a Postgres database, stopping once it catches up to the existing database state.
+### Match Service (`src/lib/match-service.ts`)
+A singleton `EventTarget` class that coordinates data operations to specific modules:
+- **Live Updates (`match-live.ts`)**: Maintains a persistent connection to Bad API and broadcasts new matches. Tries to reconnect after a while of receiving no data.
+- **Historical Sync (`match-store.ts`)**: Manages the background process of crawling Bad API history and persisting data to Postgres.
+- **Data Queries (`match-queries.ts`)**: Contains the database queries for fetching matches, searching players, and aggregating leaderboard statistics.
 
-### 2. API Layer (`src/app/api/`)
-- `/api/live`: An SSE endpoint that streams new matches from the Match Service to users.
+### Next.js API Layer (`src/app/api/`)
+- `/api/live`: An SSE endpoint that streams new matches from the Match Service to users. Periodically sends heartbeat events to keep the connection open.
 - `/api/history`: Handles paginated queries for match history with filtering.
-- `/api/leaderboard`: Aggregates win/loss/tie statistics across the entire dataset or specific time windows.
+- `/api/leaderboard`: Aggregates win/loss/tie statistics across the whole dataset or specific time windows.
 
 ## Docker Support
 
-The project is containerized and can be started using Docker Compose:
+The project is containerized and can be ran locally using Docker Compose, after making `.env` file that has the required variables listed in `.env.example`.
 ```bash
 docker compose up --build
 ```
