@@ -2,7 +2,33 @@
 
 A Next.js web app for presenting Rock-Paper-Scissors matches fetched from Reaktor's Bad API. Stores matches in a Postgres database using Drizzle ORM.
 
-The app is deployed to my k8s cluster found at [https://rps.laurimaila.com](https://rps.laurimaila.com)
+The app was deployed to my k8s cluster found at [https://rps.laurimaila.com](https://rps.laurimaila.com), it'll work until end of May 2026.
+
+## Screenshots
+
+### Recent Matches
+<table>
+  <tr>
+    <td><img src=".github/images/recent-desktop.png" alt="Recent matches desktop" /></td>
+    <td><img src=".github/images/recent-mobile.png" alt="Recent matches mobile" /></td>
+  </tr>
+</table>
+
+### Leaderboard
+<table>
+  <tr>
+    <td><img src=".github/images/leaderboard-desktop.png" alt="Leaderboard desktop" /></td>
+    <td><img src=".github/images/leaderboard-mobile.png" alt="Leaderboard mobile" /></td>
+  </tr>
+</table>
+
+### Match History
+<table>
+  <tr>
+    <td><img src=".github/images/history-desktop.png" alt="Match history desktop" /></td>
+    <td><img src=".github/images/history-mobile.png" alt="Match history mobile" /></td>
+  </tr>
+</table>
 
 ## Tech Stack
 
